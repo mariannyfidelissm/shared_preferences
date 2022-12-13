@@ -1,6 +1,28 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPref {
+  Future<bool> saveLogin(String user) async {
+    final prefs = await SharedPreferences.getInstance();
+    var result = await prefs.setString(
+        'isLoggedIn', jsonEncode({'user': user, 'isAuth': true}));
+    return result;
+  }
+
+  Future<bool> removeLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    var result = await prefs.remove('isLoggedIn');
+
+    return result;
+  }
+
+  Future<bool> isAuth() async {
+    final prefs = await SharedPreferences.getInstance();
+    var result = prefs.getString('isLoggedIn');
+
+    return result != null ? jsonDecode(result)['isAuth'] : false;
+  }
+
   Future<String?> readBackground() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString("background");

@@ -1,9 +1,9 @@
-import 'user.dart';
-import 'shared.dart';
+import '../model/user.dart';
+import '../services/shared.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 
-var styleText = const TextStyle(fontSize: 25);
+var styleText = const TextStyle(fontSize: 25, color: Colors.white);
 
 class MySharedPrefsPage extends StatefulWidget {
   const MySharedPrefsPage({Key? key}) : super(key: key);
@@ -14,9 +14,14 @@ class MySharedPrefsPage extends StatefulWidget {
 
 class _MySharedPrefsPageState extends State<MySharedPrefsPage> {
   String background = "";
-  SharedPref sharedPref = SharedPref();
+  late SharedPref sharedPref; // = SharedPref();
   User? userSave = User(nome: "", idade: "", location: "");
   User? userLoad = User(nome: "", idade: "", location: "");
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   loadImageBackground() async {
     var imageBackground = await sharedPref.readBackground();
@@ -70,8 +75,16 @@ class _MySharedPrefsPageState extends State<MySharedPrefsPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    var args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, SharedPref>;
+    if (args != null) {
+      sharedPref = args["prefs"] ?? SharedPref();
+    } else {
+      sharedPref = SharedPref();
+    }
+
     loadPreferences();
     loadImageBackground();
   }
@@ -139,6 +152,9 @@ class _MySharedPrefsPageState extends State<MySharedPrefsPage> {
                           OutlinedButton(
                             onPressed: () {
                               sharedPref.save("user", userSave!.toJson());
+
+                              sharedPref.saveLogin(userSave!.nome);
+
                               updatePreferences(userSave);
                               ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -190,7 +206,7 @@ class _MySharedPrefsPageState extends State<MySharedPrefsPage> {
                 userLoad!.nome = "";
                 sharedPref.save('user', userLoad!.toJson());
               },
-              child: Text("Tela inicial"),
+              child: const Text("Tela inicial"),
             )),
           );
   }
@@ -198,7 +214,7 @@ class _MySharedPrefsPageState extends State<MySharedPrefsPage> {
   ButtonStyle styleButton() {
     return OutlinedButton.styleFrom(
         foregroundColor: Colors.white,
-        backgroundColor: Color.fromRGBO(255, 152, 127, 1));
+        backgroundColor: const Color.fromRGBO(255, 152, 127, 1));
   }
 
   SizedBox buildTextField(
@@ -251,12 +267,19 @@ class _MySharedPrefsPageState extends State<MySharedPrefsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            Text("Name: ${userLoad!.nome}", style: styleText),
-            Text("Age: ${userLoad!.idade}", style: styleText),
-            Text("Location: ${userLoad!.location}", style: styleText),
+            buildRowInformation("Name : ", userLoad!.nome),
+            buildRowInformation("Age  : ", userLoad!.idade),
+            buildRowInformation("Location: ", userLoad!.location),
           ],
         ),
       ),
     );
+  }
+
+  Row buildRowInformation(String titulo, String dado) {
+    return Row(children: [
+      Text(titulo, style: styleText),
+      Text(dado, style: styleText),
+    ]);
   }
 }
